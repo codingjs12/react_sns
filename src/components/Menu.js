@@ -39,6 +39,12 @@ function Menu() {
           </ListItemIcon>
           <ListItemText primary="마이페이지" />
         </ListItem>
+        <ListItem component={Link} to="/recoil">
+          <ListItemIcon>
+            <AccountCircle />
+          </ListItemIcon>
+          <ListItemText primary="Recoil" />
+        </ListItem>
       </List>
     </Drawer>
   );

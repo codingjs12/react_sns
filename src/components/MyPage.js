@@ -32,7 +32,6 @@ function MyPage() {
   }
 
   const fnSave = () => {
-    const sessionUser = jwtDecode(token);
     const formData = new FormData();
 
     formData.append("file", insertFile);

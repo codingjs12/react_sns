@@ -1,4 +1,4 @@
-import React from 'react';
+import React ,{useState, useRef} from 'react';
 import {
   TextField,
   Button,
@@ -13,13 +13,61 @@ import {
   IconButton,
 } from '@mui/material';
 import { PhotoCamera } from '@mui/icons-material';
+import { useRecoilState } from 'recoil';
+import { countState } from '../states/countAtom';
+import { jwtDecode } from 'jwt-decode';
+import { useNavigate } from 'react-router-dom';
 
 function Register() {
-  const [file, setFile] = React.useState(null);
+  const token = localStorage.getItem("token");
+  const [file, setFile] = useState(null);
+
+  const sessionUser = jwtDecode(token);
+  let titleRef = useRef();
+  let contentRef = useRef();
+
+  const addFeed = () => {
+    fetch("http://localhost:3000/sns", {
+      method : "POST",
+      headers : {
+        "Content-type" : "application/json"
+      },
+      body : JSON.stringify({
+        email : sessionUser.email,
+        title : titleRef.current.value,
+        content : titleRef.current.value
+      })
+    })
+    .then(res => res.json())
+    .then(data => {
+      alert(data.message);
+      fnUploadFile(data.result.insertId);
+    })
+  }
 
   const handleFileChange = (event) => {
-    setFile(event.target.files[0]);
+    setFile(event.target.files);
   };
+
+  const fnUploadFile = (feedId)=>{
+    const formData = new FormData();
+    for(let i=0; i<file.length; i++){
+      formData.append("file", file[i]); 
+    } 
+    formData.append("feedId", feedId);
+    fetch("http://localhost:3000/sns/upload", {
+      method: "POST",
+      body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+      console.log(data);
+      // navigate("/feed"); // 원하는 경로
+    })
+    .catch(err => {
+      console.error(err);
+    });
+  }
 
   return (
     <Container maxWidth="sm">
@@ -44,8 +92,14 @@ function Register() {
           </Select>
         </FormControl>
 
-        <TextField label="제목" variant="outlined" margin="normal" fullWidth />
-        <TextField
+        <TextField inputRef={titleRef}
+          label="제목"
+          variant="outlined"
+          margin="normal"
+          fullWidth
+        />
+
+        <TextField inputRef ={contentRef}
           label="내용"
           variant="outlined"
           margin="normal"
@@ -54,8 +108,9 @@ function Register() {
           rows={4}
         />
 
-        <Box display="flex" alignItems="center" margin="normal" fullWidth>
+        <Box display="flex" alignItems="center" margin="normal">
           <input
+            multiple
             accept="image/*"
             style={{ display: 'none' }}
             id="file-upload"
@@ -67,19 +122,24 @@ function Register() {
               <PhotoCamera />
             </IconButton>
           </label>
-          {file && (
+          {/* {file && (
             <Avatar
               alt="첨부된 이미지"
               src={URL.createObjectURL(file)}
               sx={{ width: 56, height: 56, marginLeft: 2 }}
             />
-          )}
+          )} */}
           <Typography variant="body1" sx={{ marginLeft: 2 }}>
             {file ? file.name : '첨부할 파일 선택'}
           </Typography>
         </Box>
 
-        <Button variant="contained" color="primary" fullWidth style={{ marginTop: '20px' }}>
+        <Button 
+          variant="contained" 
+          color="primary" 
+          fullWidth 
+          style={{ marginTop: '20px' }} 
+          onClick={() => {addFeed()}}>
           등록하기
         </Button>
       </Box>
